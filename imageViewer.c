@@ -29,10 +29,10 @@ int main(int argc, char *argv[])
     
     // Get the type of storage format: P6 or P3 (ignore since we assume it is P6)
     
-    char *fileType = (char*)calloc(1000 ,sizeof(char));
-    fgets(fileType, 1000, file);
-    printf("%s", fileType);
-    free(fileType);
+    char *fileStorageFormat = (char*)calloc(1000 ,sizeof(char));
+    fgets(fileStorageFormat, 1000, file);
+    printf("%s", fileStorageFormat);
+    free(fileStorageFormat);
     
     // Get comment (ignore)
     
@@ -103,12 +103,15 @@ int main(int argc, char *argv[])
     {
         for(int x = 0; x < width; x++)
         {
+            // Get RGB values (8 bits per color value)
             r = getc(file);
             g = getc(file);
             b = getc(file);
             Uint32 color = SDL_MapRGB(pixelFormat, NULL, r, g, b);
+            // Update next pixel's xy - coordinates
             pixel.x = x;
             pixel.y = y;
+            // Render a pixel on the screen
             SDL_FillSurfaceRect(window_surface, &pixel, color );
         }
     }
@@ -134,3 +137,4 @@ int main(int argc, char *argv[])
     SDL_DestroyWindow(pWindow);
     return 0;
 }
+
