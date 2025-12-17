@@ -11,6 +11,10 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+char* consumeNextHeaderLine(FILE *file);
+void windowEventPoll(SDL_Window *pWindow);
+void drawPixel(SDL_Surface *window_surface, FILE *file, int width, int height);
+
 int main(int argc, char *argv[])
 {
     // Open the image to be viewed in .ppm format in binary read mode
@@ -29,44 +33,31 @@ int main(int argc, char *argv[])
     
     // Get the type of storage format: P6 or P3 (ignore since we assume it is P6)
     
-    char *fileStorageFormat = (char*)calloc(1000 ,sizeof(char));
-    fgets(fileStorageFormat, 1000, file);
-    printf("%s", fileStorageFormat);
-    free(fileStorageFormat);
+    char *storageFormat = consumeNextHeaderLine(file);
+    free(storageFormat);
     
     // Get comment (ignore)
     
-    char *comment = (char*)calloc(1000, sizeof(char));
-    fgets(comment, 1000, file);
-    printf("%s",comment);
-    free(comment);
+    consumeNextHeaderLine(file);
     
     // Get the width and height and store them in dimension to parse them using sscanf
-    
-    char *dimension = (char*)calloc(1000, sizeof(char));
-    fgets(dimension, 1000, file);
-    
-    int width = 0;
-    int height = 0;
-    
+
+    int width = 0, height = 0;
+    char *dimension = consumeNextHeaderLine(file);
     // Parse the width and height of image accordingly
-    
     sscanf(dimension, "%d %d", &width, &height);
-    printf("%d %d\n", width, height);
     free(dimension);
     
     // Also ignore the max color value since most images use the value of 255
     
-    char *maxColorVal  = (char*)calloc(1000, sizeof(char));
-    fgets(maxColorVal, 1000, file);
-    printf("%s\n", maxColorVal);
-    free(maxColorVal);
-         
+    char *maxColorValue = consumeNextHeaderLine(file);
+    free(maxColorValue);
+
     // Initialize the SDL
        
-    if(SDL_Init(SDL_INIT_VIDEO) < 0)
+    if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        printf("Failed to initialize the SDL3 library\n");
+        printf("Failed to initialize SDL: %s\n", SDL_GetError());
         return -1;
     }
     
@@ -83,7 +74,20 @@ int main(int argc, char *argv[])
     
     SDL_Surface *window_surface = SDL_GetWindowSurface(pWindow);
     SDL_ShowWindow(pWindow);
+
+    // Draw pixel by callig the responsible function
+    drawPixel(window_surface, file, width, height);
     
+    // Add some logic to keep the window open until quit event is triggered
+   
+    windowEventPoll(pWindow);
+    
+    SDL_DestroyWindow(pWindow);
+    return 0;
+}
+
+void drawPixel(SDL_Surface *window_surface, FILE *file, int width, int height)
+{
     // We will draw the image pixel by pixel, each getting its RGB values from the .ppm file
     
     SDL_Rect pixel = (SDL_Rect){0, 0, 1 , 1}; // first two values specify the position
@@ -115,10 +119,15 @@ int main(int argc, char *argv[])
             SDL_FillSurfaceRect(window_surface, &pixel, color );
         }
     }
-    
-    // Add some logic to keep the window open until quit event is triggered
-     
-    SDL_Event event;
+}
+
+/*
+* Function to keep the window open until the user quits
+*/
+
+void windowEventPoll(SDL_Window *pWindow)
+{
+   SDL_Event event;
     bool isRunning = true;
         
     while(isRunning)
@@ -133,8 +142,18 @@ int main(int argc, char *argv[])
         }
         
         SDL_UpdateWindowSurface(pWindow);
-    }
-    SDL_DestroyWindow(pWindow);
-    return 0;
+    } 
+}
+
+/*
+* Helper function to allocate memory for string character pointer to consume the headers of .ppm file
+*/
+
+char* consumeNextHeaderLine(FILE *file)
+{
+    char *headerLine = (char*)calloc(1000 ,sizeof(char));
+    fgets(headerLine, 1000, file);
+    printf("%s", headerLine);
+    return headerLine;
 }
 
