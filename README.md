@@ -23,4 +23,4 @@ It reads the image file line by line and constructs the image pixel by pixel usi
 3. Compile the program:
 
 ```bash
-g++ image_viewer.c -o image_viewer -I<include_path_here> -L<linker_path_here (e.g. .../lib)> -lSDL3
+g++ <yourSourceCode.c> -o <giveAnyExecutableName> -I<include_path_here> -L<linker_path_here (e.g. .../lib)> -lSDL3
